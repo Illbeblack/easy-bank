@@ -64,3 +64,83 @@ const inputTransferAmount = document.querySelector('.form__input--amount');
 const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
+
+const displayTransactions = function (transactions) {
+  containerTransactions.innerHTML = '';
+
+  transactions.forEach(function (trans, index) {
+    const transType = trans > 0 ? 'deposit' : 'withdrawal';
+
+    const transactionRow = `
+    <div class="transactions__row">
+      <div class="transactions__type transactions__type--${transType}">
+      ${index + 1} ${transType}
+      </div>
+      <div class="transactions__value">${trans}$</div>
+    </div>
+    `;
+    containerTransactions.insertAdjacentHTML('afterbegin', transactionRow);
+  });
+};
+
+
+const createNickNames = function(accs) {
+  accs.forEach(function(acc) {
+    acc.nickName = acc.userName.toLocaleLowerCase().split(' ').map((word) => word[0]).join('');
+  })
+};
+
+createNickNames(accounts);
+
+
+const displayBalans = function (transactions) {
+  const balance = transactions.reduce((acc, trans) => acc + trans, 0);
+  labelBalance.textContent = `${balance}$`
+}
+
+
+const displayTotal = function(trans, inter) {
+const depositesTotal = trans.filter((tr) => tr > 0)
+  .reduce((acc, tr) => acc + tr, 0);
+labelSumIn.textContent = `${depositesTotal}$`;
+
+const withdrawalTotal = trans.filter((tr) => tr < 0)
+  .reduce((acc, tr) => acc + tr, 0);
+labelSumOut.textContent = `${withdrawalTotal}$`
+
+const interestTotal = trans.filter((tr) => tr > 0)
+  .map((val) => (val * inter) / 100)
+  .filter((int) => int >= 5)
+  .reduce((acc, interest) => acc + interest, 0);
+labelSumInterest.textContent = `${interestTotal}$`
+};
+
+
+let currentAcc;
+
+btnLogin.addEventListener('click', function (e){
+  e.preventDefault();
+
+  currentAcc = accounts.find(acc => acc.nickName === inputLoginUsername.value.toLocaleLowerCase());
+
+  if(currentAcc?.pin === Number(inputLoginPin.value)) {
+    //   Display UI and welcome message
+    containerApp.style.opacity = 100;
+
+    labelWelcome.textContent = `Welcome back, ${currentAcc.userName.split(' ')[0]}!`;
+
+    //   Clear inputs
+    inputLoginUsername.value = '';
+    inputLoginPin.value = '';
+    inputLoginPin.blur();
+
+    //   Display transactions
+    displayTransactions(currentAcc.transactions);
+
+    //   Display balance
+    displayBalans(currentAcc.transactions);
+
+    //   Display total
+    displayTotal(currentAcc.transactions, currentAcc.interest)
+  }
+})
