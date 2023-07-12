@@ -83,64 +83,102 @@ const displayTransactions = function (transactions) {
   });
 };
 
-
-const createNickNames = function(accs) {
-  accs.forEach(function(acc) {
-    acc.nickName = acc.userName.toLocaleLowerCase().split(' ').map((word) => word[0]).join('');
-  })
+const createNickNames = function (accs) {
+  accs.forEach(function (acc) {
+    acc.nickName = acc.userName
+      .toLocaleLowerCase()
+      .split(' ')
+      .map((word) => word[0])
+      .join('');
+  });
 };
 
 createNickNames(accounts);
 
-
-const displayBalans = function (transactions) {
-  const balance = transactions.reduce((acc, trans) => acc + trans, 0);
-  labelBalance.textContent = `${balance}$`
-}
-
-
-const displayTotal = function(trans, inter) {
-const depositesTotal = trans.filter((tr) => tr > 0)
-  .reduce((acc, tr) => acc + tr, 0);
-labelSumIn.textContent = `${depositesTotal}$`;
-
-const withdrawalTotal = trans.filter((tr) => tr < 0)
-  .reduce((acc, tr) => acc + tr, 0);
-labelSumOut.textContent = `${withdrawalTotal}$`
-
-const interestTotal = trans.filter((tr) => tr > 0)
-  .map((val) => (val * inter) / 100)
-  .filter((int) => int >= 5)
-  .reduce((acc, interest) => acc + interest, 0);
-labelSumInterest.textContent = `${interestTotal}$`
+const displayBalans = function (account) {
+  const balance = account.transactions.reduce((acc, trans) => acc + trans, 0);
+  account.balance = balance;
+  labelBalance.textContent = `${balance}$`;
 };
 
+const displayTotal = function (trans, inter) {
+  const depositesTotal = trans
+    .filter((tr) => tr > 0)
+    .reduce((acc, tr) => acc + tr, 0);
+  labelSumIn.textContent = `${depositesTotal}$`;
+
+  const withdrawalTotal = trans
+    .filter((tr) => tr < 0)
+    .reduce((acc, tr) => acc + tr, 0);
+  labelSumOut.textContent = `${withdrawalTotal}$`;
+
+  const interestTotal = trans
+    .filter((tr) => tr > 0)
+    .map((val) => (val * inter) / 100)
+    .filter((int) => int >= 5)
+    .reduce((acc, interest) => acc + interest, 0);
+  labelSumInterest.textContent = `${interestTotal}$`;
+};
+
+const updateUI = function (accaunt) {
+  //   Display transactions
+  displayTransactions(accaunt.transactions);
+
+  //   Display balance
+  displayBalans(accaunt);
+
+  //   Display total
+  displayTotal(accaunt.transactions, accaunt.interest);
+};
 
 let currentAcc;
 
-btnLogin.addEventListener('click', function (e){
+btnLogin.addEventListener('click', function (e) {
   e.preventDefault();
 
-  currentAcc = accounts.find(acc => acc.nickName === inputLoginUsername.value.toLocaleLowerCase());
+  currentAcc = accounts.find(
+    (acc) => acc.nickName === inputLoginUsername.value.toLocaleLowerCase()
+  );
 
-  if(currentAcc?.pin === Number(inputLoginPin.value)) {
+  if (currentAcc?.pin === Number(inputLoginPin.value)) {
     //   Display UI and welcome message
     containerApp.style.opacity = 100;
 
-    labelWelcome.textContent = `Welcome back, ${currentAcc.userName.split(' ')[0]}!`;
+    labelWelcome.textContent = `Welcome back, ${
+      currentAcc.userName.split(' ')[0]
+    }!`;
 
     //   Clear inputs
     inputLoginUsername.value = '';
     inputLoginPin.value = '';
     inputLoginPin.blur();
 
-    //   Display transactions
-    displayTransactions(currentAcc.transactions);
-
-    //   Display balance
-    displayBalans(currentAcc.transactions);
-
-    //   Display total
-    displayTotal(currentAcc.transactions, currentAcc.interest)
+    updateUI(currentAcc);
   }
-})
+});
+
+btnTransfer.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  const transferAmount = Number(inputTransferAmount.value);
+  const recipientNickname = inputTransferTo.value;
+  const recipientAccount = accounts.find(
+    (account) =>
+      account.nickName === recipientNickname ||
+      account.userName === recipientNickname
+  );
+  inputTransferTo.value = '';
+  inputTransferAmount.value = '';
+
+  if (
+    transferAmount > 0 &&
+    currentAcc.balance >= transferAmount &&
+    recipientAccount &&
+    currentAcc.nickName !== recipientAccount?.nickName &&
+    currentAcc.userName !== recipientAccount?.userName
+  ) {
+    currentAcc.transactions.push(-transferAmount);
+    recipientAccount.transactions.push(transferAmount);
+    updateUI(currentAcc);
+  }
+});
