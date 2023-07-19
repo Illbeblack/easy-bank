@@ -78,7 +78,7 @@ const displayTransactions = function (transactions, sort = false) {
       <div class="transactions__type transactions__type--${transType}">
       ${index + 1} ${transType}
       </div>
-      <div class="transactions__value">${trans}$</div>
+      <div class="transactions__value">${trans.toFixed(2)}$</div>
     </div>
     `;
     containerTransactions.insertAdjacentHTML('afterbegin', transactionRow);
@@ -100,26 +100,26 @@ createNickNames(accounts);
 const displayBalans = function (account) {
   const balance = account.transactions.reduce((acc, trans) => acc + trans, 0);
   account.balance = balance;
-  labelBalance.textContent = `${balance}$`;
+  labelBalance.textContent = `${balance.toFixed(2)}$`;
 };
 
 const displayTotal = function (trans, inter) {
   const depositesTotal = trans
     .filter((tr) => tr > 0)
     .reduce((acc, tr) => acc + tr, 0);
-  labelSumIn.textContent = `${depositesTotal}$`;
+  labelSumIn.textContent = `${depositesTotal.toFixed(2)}$`;
 
   const withdrawalTotal = trans
     .filter((tr) => tr < 0)
     .reduce((acc, tr) => acc + tr, 0);
-  labelSumOut.textContent = `${withdrawalTotal}$`;
+  labelSumOut.textContent = `${withdrawalTotal.toFixed(2)}$`;
 
   const interestTotal = trans
     .filter((tr) => tr > 0)
     .map((val) => (val * inter) / 100)
     .filter((int) => int >= 5)
     .reduce((acc, interest) => acc + interest, 0);
-  labelSumInterest.textContent = `${interestTotal}$`;
+  labelSumInterest.textContent = `${interestTotal.toFixed(2)}$`;
 };
 
 const updateUI = function (accaunt) {
@@ -144,7 +144,7 @@ btnLogin.addEventListener('click', function (e) {
     (acc) => acc.nickName === inputLoginUsername.value.toLocaleLowerCase()
   );
 
-  if (currentAcc?.pin === Number(inputLoginPin.value)) {
+  if (currentAcc?.pin === +(inputLoginPin.value)) {
     //   Display UI and welcome message
     containerApp.style.opacity = 100;
 
@@ -164,7 +164,7 @@ btnLogin.addEventListener('click', function (e) {
 btnTransfer.addEventListener('click', function (e) {
   e.preventDefault();
 
-  const transferAmount = Number(inputTransferAmount.value);
+  const transferAmount = +(inputTransferAmount.value);
   const recipientNickname = inputTransferTo.value;
   const recipientAccount = accounts.find(
     (account) =>
@@ -190,7 +190,7 @@ btnTransfer.addEventListener('click', function (e) {
 btnClose.addEventListener('click', function (e) {
   e.preventDefault();
 
-  if (inputCloseUsername.value === currentAcc.nickName && Number(inputClosePin.value) === currentAcc.pin) {
+  if (inputCloseUsername.value === currentAcc.nickName && +(inputClosePin.value) === currentAcc.pin) {
     const currentAccIndex = accounts.findIndex(account => account.nickname === currentAcc.nickName);
     accounts.splice(currentAccIndex + 1, 1);
     containerApp.style.opacity = 0;
@@ -208,7 +208,7 @@ btnClose.addEventListener('click', function (e) {
 btnLoan.addEventListener('click', function(e) {
   e.preventDefault();
 
-  const loanAmount = Number(inputLoanAmount.value);
+  const loanAmount = Math.floor(inputLoanAmount.value);
 
   if (loanAmount > 0 && currentAcc.transactions.some(tr => tr >= loanAmount / 10)) {
     currentAcc.transactions.push(loanAmount);
@@ -226,3 +226,15 @@ btnSort.addEventListener('click', function (e) {
   displayTransactions(currentAcc.transactions, !transSort);
   transSort = !transSort;
 })
+
+/* Painting ROW
+
+const logoImg = document.querySelector('.logo');
+logoImg.addEventListener('click', function () {
+  [...document.querySelectorAll('.transactions__row')].forEach(function(row, i){
+    if (i % 4 === 0) {
+      row.style.backgroundColor = 'grey';
+    }
+  });
+});
+*/
