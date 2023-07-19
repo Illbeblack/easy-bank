@@ -65,10 +65,12 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const displayTransactions = function (transactions) {
+const displayTransactions = function (transactions, sort = false) {
   containerTransactions.innerHTML = '';
 
-  transactions.forEach(function (trans, index) {
+  const trans = sort ? transactions.slice().sort((x, y) => x - y) : transactions;
+
+  trans.forEach(function (trans, index) {
     const transType = trans > 0 ? 'deposit' : 'withdrawal';
 
     const transactionRow = `
@@ -133,6 +135,8 @@ const updateUI = function (accaunt) {
 
 let currentAcc;
 
+//   Event Handlers
+
 btnLogin.addEventListener('click', function (e) {
   e.preventDefault();
 
@@ -182,3 +186,43 @@ btnTransfer.addEventListener('click', function (e) {
     updateUI(currentAcc);
   }
 });
+
+btnClose.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  if (inputCloseUsername.value === currentAcc.nickName && Number(inputClosePin.value) === currentAcc.pin) {
+    const currentAccIndex = accounts.findIndex(account => account.nickname === currentAcc.nickName);
+    accounts.splice(currentAccIndex + 1, 1);
+    containerApp.style.opacity = 0;
+    labelWelcome.textContent = 'Login to your account';
+  }
+  else {
+    console.log('wrong data')
+  }
+
+  inputCloseUsername.value = '';
+  inputClosePin.value = '';
+
+})
+
+btnLoan.addEventListener('click', function(e) {
+  e.preventDefault();
+
+  const loanAmount = Number(inputLoanAmount.value);
+
+  if (loanAmount > 0 && currentAcc.transactions.some(tr => tr >= loanAmount / 10)) {
+    currentAcc.transactions.push(loanAmount);
+    updateUI(currentAcc)
+  }
+  inputLoanAmount.value = '';
+})
+
+//   SORT FEATURE
+
+let transSort = false;
+
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+  displayTransactions(currentAcc.transactions, !transSort);
+  transSort = !transSort;
+})
