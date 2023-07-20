@@ -70,9 +70,6 @@ const account4 = {
     '2020-11-15T10:45:23.907Z',
     '2021-01-22T12:17:46.255Z',
     '2021-02-12T15:14:06.486Z',
-    '2021-03-09T11:42:26.371Z',
-    '2021-05-21T07:43:59.331Z',
-    '2021-06-22T15:21:20.814Z',
   ],
   currency: 'EUR',
   locale: 'fr-CA',
@@ -89,9 +86,6 @@ const account5 = {
     '2020-11-15T10:45:23.907Z',
     '2021-01-22T12:17:46.255Z',
     '2021-02-12T15:14:06.486Z',
-    '2021-03-09T11:42:26.371Z',
-    '2021-05-21T07:43:59.331Z',
-    '2021-06-22T15:21:20.814Z',
   ],
   currency: 'USD',
   locale: 'en-US',
@@ -125,19 +119,26 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const displayTransactions = function (transactions, sort = false) {
+const displayTransactions = function (acc, sort = false) {
   containerTransactions.innerHTML = '';
 
-  const trans = sort ? transactions.slice().sort((x, y) => x - y) : transactions;
+  const trans = sort ? acc.transactions.slice().sort((x, y) => x - y) : acc.transactions;
 
   trans.forEach(function (trans, index) {
     const transType = trans > 0 ? 'deposit' : 'withdrawal';
+
+    const date = new Date(acc.transactionsDates[index]);
+    const day = `${date.getDate()}`.padStart(2, '0');
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const year = date.getFullYear();
+    const transDate = `${day}/${month}/${year}`
 
     const transactionRow = `
     <div class="transactions__row">
       <div class="transactions__type transactions__type--${transType}">
       ${index + 1} ${transType}
       </div>
+      <div class="transactions__date">${transDate}</div>
       <div class="transactions__value">${trans.toFixed(2)}$</div>
     </div>
     `;
@@ -184,7 +185,7 @@ const displayTotal = function (trans, inter) {
 
 const updateUI = function (accaunt) {
   //   Display transactions
-  displayTransactions(accaunt.transactions);
+  displayTransactions(accaunt);
 
   //   Display balance
   displayBalans(accaunt);
@@ -211,6 +212,14 @@ btnLogin.addEventListener('click', function (e) {
     labelWelcome.textContent = `Welcome back, ${
       currentAcc.userName.split(' ')[0]
     }!`;
+
+    //   Create date
+
+    const now = new Date();
+    const day = `${now.getDate()}`.padStart(2, '0');
+    const month = `${now.getMonth() + 1}`.padStart(2, '0');
+    const year = now.getFullYear();
+    labelDate.textContent = `as of ${day}/${month}/${year}`
 
     //   Clear inputs
     inputLoginUsername.value = '';
@@ -241,8 +250,14 @@ btnTransfer.addEventListener('click', function (e) {
     currentAcc.nickName !== recipientAccount?.nickName &&
     currentAcc.userName !== recipientAccount?.userName
   ) {
+    //   Add transaction
     currentAcc.transactions.push(-transferAmount);
     recipientAccount.transactions.push(transferAmount);
+
+    //   Add date
+    currentAcc.transactionsDates.push(new Date().toISOString());
+    recipientAccount.transactionsDates.push(new Date().toISOString());
+
     updateUI(currentAcc);
   }
 });
@@ -272,6 +287,7 @@ btnLoan.addEventListener('click', function(e) {
 
   if (loanAmount > 0 && currentAcc.transactions.some(tr => tr >= loanAmount / 10)) {
     currentAcc.transactions.push(loanAmount);
+    currentAcc.transactionsDates.push(new Date().toISOString());
     updateUI(currentAcc)
   }
   inputLoanAmount.value = '';
@@ -283,7 +299,7 @@ let transSort = false;
 
 btnSort.addEventListener('click', function (e) {
   e.preventDefault();
-  displayTransactions(currentAcc.transactions, !transSort);
+  displayTransactions(currentAcc, !transSort);
   transSort = !transSort;
 })
 
