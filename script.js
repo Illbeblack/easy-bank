@@ -119,7 +119,7 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const formatTransDate = function(date) {
+const formatTransDate = function(date, locale) {
   const getDaysBetween = (date1, date2) => Math.round(Math.abs((date2 - date1) / (1000 * 60 * 60 * 24)));
   const daysPassed = getDaysBetween(new Date(), date);
 
@@ -127,11 +127,16 @@ const formatTransDate = function(date) {
   if (daysPassed === 1) return 'Yesterday';
   if (daysPassed <= 7) return `${daysPassed} days ago`;
   else {
+    return new Intl.DateTimeFormat(locale).format(date);
+
+    /* OLD SOLUTION
+
     const day = `${date.getDate()}`.padStart(2, '0');
     const month = `${date.getMonth() + 1}`.padStart(2, '0');
     const year = date.getFullYear();
 
     return `${day}/${month}/${year}`;
+  */
   }
 };
 
@@ -143,7 +148,7 @@ const displayTransactions = function (acc, sort = false) {
   trans.forEach(function (trans, index) {
     const transType = trans > 0 ? 'deposit' : 'withdrawal';
 
-    const transDate = formatTransDate(new Date(acc.transactionsDates[index]));
+    const transDate = formatTransDate(new Date(acc.transactionsDates[index]), acc.locale);
 
     const transactionRow = `
     <div class="transactions__row">
@@ -228,10 +233,24 @@ btnLogin.addEventListener('click', function (e) {
     //   Create date
 
     const now = new Date();
+    const options = {
+      hour: 'numeric',
+      minute: 'numeric',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      weekday: 'long',
+    };
+
+    labelDate.textContent = new Intl.DateTimeFormat(currentAcc.locale, options).format(now);
+
+    /*   OLD  SOLUTION
+    const now = new Date();
     const day = `${now.getDate()}`.padStart(2, '0');
     const month = `${now.getMonth() + 1}`.padStart(2, '0');
     const year = now.getFullYear();
     labelDate.textContent = `as of ${day}/${month}/${year}`
+    */
 
     //   Clear inputs
     inputLoginUsername.value = '';
